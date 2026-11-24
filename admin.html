@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NickForge — админ-панель</title>
+<style>
+body{margin:0;background:#0f1117;color:#e8ecf3;font:14px/1.5 -apple-system,"Segoe UI",Roboto,sans-serif;padding:24px}
+.wrap{max-width:900px;margin:auto}h1{margin:0 0 4px}p.sub{color:#98a2b3;margin:0 0 20px}
+button{padding:12px 18px;border:0;border-radius:10px;background:#6d5dfc;color:#fff;font-weight:600;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:18px}th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #262c38}th{color:#8f9aac;font-weight:500}.name{font-size:16px;font-weight:700;color:#fff}.score{color:#7ee2b0}
+.top{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>NickForge · админ-панель</h1>
+<p class="sub">Генерация 100 имён, отбор по красоте. Ссылку sees только админ.</p>
+<div class="top"><button id="go">Собрать 100 и отобрать топ-25</button><span id="stat"></span></div>
+<table id="tbl"><thead><tr><th>#</th><th>Юзернейм</th><th>Оценка красоты</th></tr></thead><tbody></tbody></table>
+</div>
+<script>
+const ONSET={1:'bcdfghjklmnprstvwxyz'.split(''),2:['bl','br','cl','cr','dr','fl','fr','gl','gr','pl','pr','sc','sk','sl','sm','sn','sp','st','sw','tr','tw','th','sh','ch','ph','wh','wr','dw','gw','kn'],3:['str','spr','scr','thr','shr','spl','squ']};
+const VOWEL={1:'aeiou'.split(''),2:['ai','ay','ea','ee','ei','ey','ie','oa','oi','oo','ou','ow','ue','ui','aw','eu'],3:['eau','iou','yai']};
+const CODA={1:'bcdfgklmnprstxyz'.split(''),2:['nd','nt','st','ft','sk','sp','ss','ll','mm','nn','rr','tt','ck','sh','ch','th','ng','nk','mp','rt','rs','rd','rm','rn','lp','lt','lk','ld','lf','gh'],3:['rst','nds','rds','nts','sts','mps','lts','cks','ngs','pts','sks']};
+const PAT=[[2,2,1],[2,1,2],[1,2,2],[1,3,1],[3,1,1],[1,1,3]];
+const REAL=['brave','cloud','dream','flame','grace','light','magic','novel','ocean','pride','quest','river','smile','storm','track','unity','vivid','world','young','zesty','pulse','swift','clear','shine','bliss','frost','glows','hearts'];
+const NICE=new Set('aeilmnorst'),HARSH=new Set('xqzj'),VOW=new Set('aeiou');
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function gen(){if(Math.random()<.2)return pick(REAL);for(let i=0;i<60;i++){const p=pick(PAT);const n=pick(ONSET[p[0]])+pick(VOWEL[p[1]])+pick(CODA[p[2]]);if(n.length===5&&/^[a-z]+$/.test(n)&&!/(.)\1\1/.test(n))return n}return pick(REAL)}
+function beauty(n){let s=0;if(REAL.includes(n))s+=6;for(const c of n)if(NICE.has(c))s+=.6;if(HARSH.has(n[0]))s-=2;let alt=0;for(let i=0;i<n.length-1;i++)if(VOW.has(n[i])!==VOW.has(n[i+1]))alt++;s+=alt*.7;for(const b of ['rst','ngs','mps','lts','cks','sks','gh','th','sh','ch','ph'])if(n.includes(b))s-=1.2;for(let i=0;i<n.length-1;i++)if(n[i]===n[i+1])s-=1.5;if(n[0]===n[4])s+=.8;if(VOW.has(n[4]))s+=.5;for(const g of ['br','dr','fl','gl','gr','pl','pr','sl','sm','st','tr','tw','bl','cr'])if(n.startsWith(g)){s+=1;break}return Math.round(s*10)/10}
+document.getElementById('go').onclick=()=>{const m=new Map();while(m.size<100){const n=gen();if(!m.has(n))m.set(n,beauty(n))}
+const arr=[...m.entries()].sort((a,b)=>b[1]-a[1]).slice(0,25);
+document.getElementById('stat').textContent='Собрано 100, показаны лучшие 25';
+document.querySelector('#tbl tbody').innerHTML=arr.map(([n,s],i)=>`<tr><td>${i+1}</td><td class="name">@${n}</td><td class="score">${s}</td></tr>`).join('')};
+</script>
+</body>
+</html>

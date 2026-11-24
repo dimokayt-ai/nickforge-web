@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>NickForge — красивые юзернеймы</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{margin:0;background:#0e1015;color:#eef1f6;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:18px}
+.wrap{max-width:640px;margin:auto}h1{font-size:22px;margin:0 0 6px}p.sub{color:#9aa4b2;margin:0 0 18px}
+.card{background:#171b24;border:1px solid #262d3a;border-radius:14px;padding:14px;margin:10px 0}
+button{width:100%;padding:13px;border:0;border-radius:12px;background:#6d5dfc;color:#fff;font-size:16px;font-weight:600;cursor:pointer}
+button.ghost{background:#232a38;color:#cfd6e4;margin-top:8px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-bottom:1px solid #252b36}
+.row:last-child{border:0}.name{font-weight:700;font-size:17px;color:#fff}.free{color:#5ee0a0}.taken{color:#ff7b8a}.score{color:#8b95a5;font-size:12px}
+.pill{background:#2a233f;color:#b9a8ff;padding:4px 8px;border-radius:20px;font-size:12px;display:inline-block;margin-bottom:10px}
+.pay{background:linear-gradient(135deg,#7c5cff,#4d8bff)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="pill">NickForge · 100 идей</div>
+  <h1>Самые красивые юзернеймы</h1>
+  <p class="sub">Генерирую 100 читаемых 5-буквенных имён и по фонетике отбираю лучшие. Статус проверяю через Telegram.</p>
+
+  <div id="gate" class="card" style="display:none">
+    <b>Полный отбор — 20 Telegram Stars</b>
+    <p class="sub">Откроет топ-25 с оценкой красоты и статусом «свободен/занят».</p>
+    <button class="pay" id="payBtn">Купить за 20 Stars</button>
+    <button class="ghost" id="demoBtn">Показать 5 бесплатно</button>
+  </div>
+
+  <div id="result" class="card" style="display:none"></div>
+  <button class="ghost" id="againBtn" style="display:none">Сгенерировать ещё 100</button>
+</div>
+<script>
+const TG=window.Telegram&&Telegram.WebApp;if(TG)TG.ready();
+const qs=new URLSearchParams(location.search);
+const paid=qs.get('startapp')==='paid'||qs.get('paid')==='1';
+const ONSET={1:'bcdfghjklmnprstvwxyz'.split(''),2:['bl','br','cl','cr','dr','fl','fr','gl','gr','pl','pr','sc','sk','sl','sm','sn','sp','st','sw','tr','tw','th','sh','ch','ph','wh','wr','dw','gw','kn'],3:['str','spr','scr','thr','shr','spl','squ']};
+const VOWEL={1:'aeiou'.split(''),2:['ai','ay','ea','ee','ei','ey','ie','oa','oi','oo','ou','ow','ue','ui','aw','eu'],3:['eau','iou','yai']};
+const CODA={1:'bcdfgklmnprstxyz'.split(''),2:['nd','nt','st','ft','sk','sp','ss','ll','mm','nn','rr','tt','ck','sh','ch','th','ng','nk','mp','rt','rs','rd','rm','rn','lp','lt','lk','ld','lf','gh'],3:['rst','nds','rds','nts','sts','mps','lts','cks','ngs','pts','sks']};
+const PAT=[[2,2,1],[2,1,2],[1,2,2],[1,3,1],[3,1,1],[1,1,3]];
+const REAL=['brave','cloud','dream','flame','grace','light','magic','novel','ocean','pride','quest','river','smile','storm','track','unity','vivid','world','young','zesty','pulse','swift','clear','shine','bliss','frost','glows','hearts'];
+const NICE=new Set('aeilmnorst'),HARSH=new Set('xqzj'),VOW=new Set('aeiou');
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function gen(){if(Math.random()<.2)return pick(REAL);for(let i=0;i<60;i++){const p=pick(PAT);const n=pick(ONSET[p[0]])+pick(VOWEL[p[1]])+pick(CODA[p[2]]);if(n.length===5&&/^[a-z]+$/.test(n)&&!/(.)\1\1/.test(n))return n}return pick(REAL)}
+function beauty(n){let s=0;if(REAL.includes(n))s+=6;for(const c of n)if(NICE.has(c))s+=.6;if(HARSH.has(n[0]))s-=2;let alt=0;for(let i=0;i<n.length-1;i++)if(VOW.has(n[i])!==VOW.has(n[i+1]))alt++;s+=alt*.7;for(const b of ['rst','ngs','mps','lts','cks','sks','gh','th','sh','ch','ph'])if(n.includes(b))s-=1.2;for(let i=0;i<n.length-1;i++)if(n[i]===n[i+1])s-=1.5;if(n[0]===n[4])s+=.8;if(VOW.has(n[4]))s+=.5;for(const g of ['br','dr','fl','gl','gr','pl','pr','sl','sm','st','tr','tw','bl','cr'])if(n.startsWith(g)){s+=1;break}return Math.round(s*10)/10}
+function top(count){const m=new Map();while(m.size<count){const n=gen();if(!m.has(n))m.set(n,beauty(n))}return [...m.entries()].sort((a,b)=>b[1]-a[1])}
+function render(list){document.getElementById('gate').style.display='none';document.getElementById('result').style.display='block';document.getElementById('againBtn').style.display='block';document.getElementById('result').innerHTML=list.map(([n,s],i)=>`<div class="row"><div><span class="name">@${n}</span> <span class="score">${i+1}. оценка ${s}</span></div><div class="pill">проверить в Telegram</div></div>`).join('')}
+if(paid){render(top(25))}else{document.getElementById('gate').style.display='block'}
+document.getElementById('payBtn').onclick=()=>{if(TG)TG.sendData(JSON.stringify({action:'pay'}));else location.href='https://t.me/nickforgegen_bot?start=buy'};
+document.getElementById('demoBtn').onclick=()=>render(top(5));
+document.getElementById('againBtn').onclick=()=>render(top(paid?25:5));
+</script>
+</body>
+</html>
